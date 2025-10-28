@@ -52,7 +52,7 @@ x0 = chirp0[0]
 initial_guess = [(np.max(intensity) - np.min(intensity))/2, 2*np.pi*T*T, 0, (np.max(intensity) - np.min(intensity))/2, 35e-10] 
 par, cov = curve_fit(sinss, chirp_rate, intensity, p0=initial_guess)
 A, w, ph, s, al = par
-print("A, s, A+s, s-A= ", A, s, s+A, s-A)
+#print("A, s, A+s, s-A= ", A, s, s+A, s-A)
 dw, dph, dA, ds = np.sqrt(cov[1,1]), np.sqrt(cov[2,2]), np.sqrt(cov[0,0]), np.sqrt(cov[4,4])
 dgE = 1/k/T**2/(A/dA*sk)
 dgE = abs(dgE)
