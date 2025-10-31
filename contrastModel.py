@@ -21,7 +21,7 @@ def fR(r, dw, f, Dt): # laser phase
 
 def RiM(t0, r, f, Dt, dw): # Rabi impulse Matrix (r(t0))
 
-    We = np.sqrt(WR**2-(dw-dwAC)**2)
+    WR = np.sqrt(We**2+(dw-dwAC)**2)
 
     M = np.zeros((2, 2), dtype=complex)
 
@@ -94,7 +94,7 @@ def chirp(a1, a2, na):
     P1 = np.array(P1)
     P2 = np.array(P2)
 
-    plt.plot(a_range, P2)
+    plt.plot(a_range, np.abs(P2))
     plt.title("interference")
     plt.xlabel("chirp rate")
     plt.ylabel("Population")
@@ -115,12 +115,12 @@ w0 = 6.8*1e9*2*np.pi # частота сверхтонкого перехода
 
 # experimental parameters
 ty = 20e-6 # pi/2 impulse duration
-a1 = 25.125e6 # start chirp
-a2 = 25.130e6 # end chirp
-na = 1 # chirp points
+a1 = 25.025e6 # start chirp
+a2 = 25.225e6 # end chirp
+na = 101 # chirp points
 Dw = 1/ty # Raman pi/2 pulse width
 Dv = Dw*c/(keff*c) # cutted speed width
-WR = np.pi/2/ty # Rabi freq 78539
+We = np.pi/2/ty # Rabi freq 78539
 T = 5e-3 # between impulse
 dw0 = 0. # start laser detuning
 v0z = 0. # начальное смещение по вертикальной скорости
@@ -128,5 +128,5 @@ n = 1000 # количество рассчётных точек
 dwAC, WgAC, WeAC = 0., 0., 0. # dynamic start AC shifts
 g = 9.8
 
-print(keff*h_/mRb*keff)
-#chirp(a1, a2, na)
+#print(keff*h_/mRb*keff)
+chirp(a1, a2, na)
