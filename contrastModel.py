@@ -1,5 +1,6 @@
 import numpy as np 
 import matplotlib.pyplot as plt
+from scipy.integrate import solve_ivp
 
 
 def maxwell_vz(vz, v0z):      # Функция распределения Максвелла для v_z
@@ -8,13 +9,43 @@ def maxwell_vz(vz, v0z):      # Функция распределения Мак
     return prefactor * np.exp(exponent)
 
 
-
 def dw(t, a, vz):
     # print(2*np.pi*a*t, "a")
     # print(keff*vz, "b")
     # print(dw0 + 2*np.pi*a*t - keff*vz, "c")
     # print(t*1e3, "T")
     return dw0 + 2*np.pi*a*t - keff*vz
+
+
+def RiM1f(t, z, a, vz_1, vz_2, phi, zi): # Rabi impulse Matrix 1 first
+
+    M = np.zeros((2, 2), dtype=complex)
+
+    M[0,0] = 0
+    M[0,1] = We*np.exp(1j*(dw(t, a, vz_1)-keff*zi)+phi)
+    M[1,0] = We*np.exp(1j*(dw(t, a, vz_2)-keff*zi)+phi)
+    M[1,1] = 0
+
+    M = M/2/1j
+
+    return M@z
+
+def RiM1s(c1, c2, Dt, t, z, a, vzI, vzII, phi, zi): # Rabi impulse Matrix 1 solving
+
+    z0 = np.array([c1, c2], dtype=complex)
+
+    t_span = (t, t+Dt)
+    t_eval = np.linspace(t, t+Dt, 1000)
+
+    sol = solve_ivp(RiM1f(t, z, a, vzI, vzII, phi, zi), t_span, z0, t_eval=t_eval, method='RK45')
+
+    # Извлекаем результаты
+    t = sol.t
+    z1 = sol.y[0]  # z1(t)
+    z2 = sol.y[1]  # z2(t)
+
+    return np.array([z1, z2], dtype=complex)
+
 
 def fR(r, dw, f, Dt): # laser phase
     return -keff*r+(w0+dw)*Dt+f
@@ -68,9 +99,11 @@ def interference(a, vz0):
     c3II = M3II@np.array([0,c2[1]])
 
     c3 = c3I + c3II
+    P3 = c3*c3.conjugate()
+    P3 = P3.real
+    P3 = P3/np.sum(P3)
 
-
-    return c3*c3.conjugate()
+    return P3
 
 def tempdist(a):
 
@@ -98,6 +131,8 @@ def chirp(a1, a2, na):
     plt.title("interference")
     plt.xlabel("chirp rate")
     plt.ylabel("Population")
+    print(np.max(P2)- np.min(P2), "swing")
+    print((np.max(P2)- np.min(P2))/(np.max(P2) + np.min(P2)), "contrast")
 
     plt.show()
 
