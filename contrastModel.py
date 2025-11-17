@@ -3,10 +3,10 @@ import matplotlib.pyplot as plt
 from scipy.integrate import solve_ivp
 
 
-def maxwell_vz(vz, v0z):      # Функция распределения Максвелла для v_z
-    prefactor = np.sqrt(mRb / (2 * np.pi * kb * T))
-    exponent = - (mRb * (vz-v0z)**2) / (2 * kb * T)
-    return prefactor * np.exp(exponent)
+# def maxwell_vz(vz, v0z):      # Функция распределения Максвелла для v_z
+#     prefactor = np.sqrt(mRb / (2 * np.pi * kb * T))
+#     exponent = - (mRb * (vz-v0z)**2) / (2 * kb * T)
+#     return prefactor * np.exp(exponent)
 
 
 def dw1(t0, a, vz):
@@ -89,6 +89,29 @@ def interference1(a, vz0):
 
     return P3
 
+def chirp1(a1, a2, na):
+    vz0 = 0
+    P1 = []
+    P2 = []
+    a_range = np.linspace(a1, a2, na)
+    for a in a_range:
+        Pa = interference1(a, vz0)
+        P1.append(Pa[0])
+        P2.append(Pa[1])
+
+    P1 = np.array(P1)
+    P2 = np.array(P2)
+
+    plt.plot(a_range, P2)
+    plt.title("interference")
+    plt.xlabel("chirp rate")
+    plt.ylabel("Population")
+    print(np.max(P2)- np.min(P2), "swing")
+    print((np.max(P2)- np.min(P2))/(np.max(P2) + np.min(P2)), "contrast")
+
+    plt.show()
+
+    return 1
 
 # def dw(t, a): # отстройка в СО атома без учёта его скорости
 
@@ -153,38 +176,38 @@ def interference1(a, vz0):
 
 #     return P3
 
-def tempdist(a):
+# def tempdist(a):
 
-    vz_d = np.linspace(-Dv+v0z, +Dv+v0z, 100) # скоростной диапазон
-    Pvz = []
-    for vz in vz_d:
-        Pvz.append(interference1(a, vz))
+#     vz_d = np.linspace(-Dv+v0z, +Dv+v0z, 100) # скоростной диапазон
+#     Pvz = []
+#     for vz in vz_d:
+#         Pvz.append(interference1(a, vz))
 
-    return 1
+#     return 1
 
-def chirp(a1, a2, na):
-    vz0 = 0
-    P1 = []
-    P2 = []
-    a_range = np.linspace(a1, a2, na)
-    for a in a_range:
-        Pa = interference1(a, vz0)
-        P1.append(Pa[0])
-        P2.append(Pa[1])
+# def chirp(a1, a2, na):
+#     vz0 = 0
+#     P1 = []
+#     P2 = []
+#     a_range = np.linspace(a1, a2, na)
+#     for a in a_range:
+#         Pa = interference(a, vz0)
+#         P1.append(Pa[0])
+#         P2.append(Pa[1])
 
-    P1 = np.array(P1)
-    P2 = np.array(P2)
+#     P1 = np.array(P1)
+#     P2 = np.array(P2)
 
-    plt.plot(a_range, P2)
-    plt.title("interference")
-    plt.xlabel("chirp rate")
-    plt.ylabel("Population")
-    print(np.max(P2)- np.min(P2), "swing")
-    print((np.max(P2)- np.min(P2))/(np.max(P2) + np.min(P2)), "contrast")
+#     plt.plot(a_range, P2)
+#     plt.title("interference")
+#     plt.xlabel("chirp rate")
+#     plt.ylabel("Population")
+#     print(np.max(P2)- np.min(P2), "swing")
+#     print((np.max(P2)- np.min(P2))/(np.max(P2) + np.min(P2)), "contrast")
 
-    plt.show()
+#     plt.show()
 
-    return 1
+#     return 1
 
 # constants
 c = 3e8
@@ -212,7 +235,7 @@ n = 1000 # количество рассчётных точек
 dwAC, WgAC, WeAC = 0., 0., 0. # dynamic start AC shifts
 g = 9.81459
 
-#print(keff*h_/mRb*keff/We)
-print(keff*g/2/np.pi, "a0")
-chirp(a1, a2, na)
+print(keff*h_/mRb*keff/We)
+#print(keff*g/2/np.pi, "a0")
+chirp1(a1, a2, na)
 
