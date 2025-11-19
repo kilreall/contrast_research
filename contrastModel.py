@@ -213,19 +213,19 @@ def dw2(t0, a, vz):
     vz = vz+v_s
     return dw0 + 2*np.pi*a*t0 - keff*vz
 
-def fR2(t0, r, dw, ph):
-    return  -keff*r + (w0 + dw)*t0 + ph
+def fR2(t0, z, vz, a, ph, vz0):
+    return  -keff*z + (2*w0 + dw2(0, 1, vz0) + dw2(t0, a, vz))*t0/2 + ph
 
-def RiM2(t0, r, ph, Dt, dw):
+def RiM2(t0, r, vz, Dt, a, ph, vz0):
 
-    dtn = (Wg**2 - We**2) / D - dw
+    dtn = Wg**2/D - We**2/D - dw2(t0, a, vz)
     WR = np.sqrt(W0**2 + dtn**2)
 
-    laser_phase = fR2(t0, r, dw, ph)
+    laser_phase = fR2(t0, r, vz, a, ph, vz0)
 
     # динамические фазы
-    ph_p  = np.exp(1j * (Wg**2/D + We**2/D + dw) * Dt/2)
-    ph_m = np.exp(1j * (Wg**2/D + We**2/D - dw) * Dt/2)
+    ph_p  = np.exp(1j * (Wg**2/D + We**2/D + dw2(t0, a, vz)) * Dt/2)
+    ph_m = np.exp(1j * (Wg**2/D + We**2/D - dw2(t0, a, vz)) * Dt/2)
 
     M = np.zeros((2, 2), dtype=complex)
 
@@ -246,33 +246,37 @@ def RiM2(t0, r, ph, Dt, dw):
 def interference2(a, vz0):
 
     c0 = np.array([1,0], dtype=complex)
-    c1 = RiM2(0, 0, 0, ty, dw2(0, a, vz0))@c0
+    c1 = RiM2(0, 0, vz0, ty, a, 0, vz0)@c0
 
-    z2I = (vz0 + v_s)*T + g*T**2/2
-    vz2I = vz0 + v_s + g*T
+    z2I = (vz0 + 2*v_s)*T + g*T**2/2
+    vz2I = vz0 + 2*v_s + g*T
 
     z2II = vz0*T + g*T**2/2
     vz2II = vz0 + g*T
 
-    c2i = np.array([0, c1[1]], dtype=complex)
-    c2ii = np.array([c1[0], 0], dtype=complex)
+    c1i = np.array([0, c1[1]], dtype=complex)
+    c1ii = np.array([c1[0], 0], dtype=complex)
 
-    c2i = RiM2(T, z2I, 0, 2*ty, dw2(T, a, vz2II))@c2i
+    c2i = RiM2(T, z2I, vz2II, 2*ty, a, 0, vz0)@c1i
     
-    c2ii = RiM2(T, z2II, 0, 2*ty, dw2(T, a, vz2II))@c2ii
+    c2ii = RiM2(T, z2II, vz2II, 2*ty, a, 0, vz0)@c1ii
 
 
     c2 = np.array([c2i[0], c2ii[1]], dtype=complex)
 
-    z3I = z2I + (vz2I-v_s)*T+g*T*T/2
-    vz3I = vz2I - v_s + g*T
+    z3I = z2I + (vz2I-2*v_s)*T+g*T*T/2
+    vz3I = vz2I - 2*v_s + g*T
 
-    z3II = z2II + (vz2II+v_s)*T+g*T**2/2
-    vz3II = vz2II + v_s + g*T
+    z3II = z2II + (vz2II + 2*v_s)*T+g*T**2/2
+    vz3II = vz2II + 2*v_s + g*T
 
-    c3 = RiM2(2*T, z3II, 0, ty, dw2(2*T, a, vz3I))@c2
+    #c3 = RiM2(2*T, z3II, vz3I, ty, a, 0, vz0)@c2 переход для разных путей считается одновременно
+    c3i = RiM2(2*T, z3I, vz3I, ty, a, 0, vz0)@np.array([c2i[0], 0], dtype=complex)
 
-    
+    c3ii = RiM2(2*T, z3II, vz3I, ty, a, 0, vz0)@np.array([0, c2ii[1]], dtype=complex)
+
+    c3 = c3i + c3ii
+
     P3 = np.abs(c3)**2
 
 
@@ -329,8 +333,9 @@ dwAC, Wg, We = 0., 5e6, 3.5e6 # dynamic start AC shifts
 g = 9.81459
 D = 1e9
 
-print(keff*h_/mRb*keff/We)
+print(keff*h_/mRb*keff/W0/2)
 #print(keff*g/2/np.pi, "a0")
+print(keff*g/2/np.pi)
 
 chirp2(a1, a2, na)
 
