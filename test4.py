@@ -64,7 +64,7 @@ w0 = 6.8*1e9*2*np.pi # частота сверхтонкого перехода
 v_s = keff*h_/mRb/2 # половина переданной фотонами скорости
 
 # experimental parameters
-ty = 20e-6 # pi/2 impulse duration
+ty = 2e-6 # pi/2 impulse duration
 a1 = 25.025e6 # start chirp
 a2 = 25.225e6 # end chirp
 na = 505# chirp points

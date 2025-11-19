@@ -19,7 +19,7 @@ k = k*2*np.pi
 # start_freq = 90582400/70*5282
 # dt = 30e-3 # s для чирпирования
 n = 101 # количество точек
-T = 10200e-6 # s временной интервал между пи импульсами
+T = 600e-6 # s временной интервал между пи импульсами
 M = 0
 Tg = 0.00357# T1:0.4;T2:0.089;T4:0.0226;T6:0.0109;T8:0.0061;T10:0.00357;T12:0.0027; # пристрелка периода для fitа
 gR = 9.68
@@ -38,7 +38,7 @@ sk = 1 # коэф поправки для оценки погрешности
 
 
 # чтение csv P(a)
-file_path = r'2025-10-24_contrast_vs_T\norm_10200_us.csv' 
+file_path = r'2025-10-24_contrast_vs_T\norm_600_us.csv' 
 data = np.genfromtxt(file_path, delimiter=',', dtype=None, skip_header=1)
 data = np.array(data.tolist())
 
