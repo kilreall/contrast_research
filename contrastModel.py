@@ -216,8 +216,11 @@ def dw2(t0, a, vz):
 # def fR2(t0, z, vz, a, ph, vz0): # хороший вариант
 #     return  -keff*z + (2*w0 + dw2(0, 1, vz0) + dw2(t0, a, vz))*t0/2 + ph
 
-def fR2(t0, z, vz, a, ph, vz0): # хороший вариант
-    return  -keff*z + (2*w0 + dw2(0, 1, vz0) + dw2(t0, a, vz))*t0/2 + ph 
+# def fR2(t0, z, vz, a, ph, vz0): # хороший вариант
+#     return  -keff*z + (2*w0 + dw2(0, 1, vz0) + dw2(t0, a, vz))*t0/2 + ph 
+
+def fR2(t0, z, vz, a, ph, vz0): # правильный вариант
+    return  -keff*z + (w0+dw0)*t0 + np.pi*a*t0**2 + ph # - w0*t0 возможно следует добавить, но влияния не замечено
 
 def RiM2(t0, r, vz, Dt, a, ph, vz0):
 
@@ -346,16 +349,16 @@ w0 = 6.8*1e9*2*np.pi # частота сверхтонкого перехода
 v_s = keff*h_/mRb/2 # переданная фотонами половина скорость
 
 # experimental parameters
-ty = 2e-6 # pi/2 impulse duration
-a1 = 25.025e6 # start chirp
-a2 = 25.05e6 # # end chirp
+ty = 20e-6 # pi/2 impulse duration
+a1 = 25.050e6 # start chirp
+a2 = 25.225e6 # # end chirp
 na = 100# chirp points
 a_range = np.linspace(a1, a2, na)
 nT = 300
 Dw = 1/ty # Raman pi/2 pulse width
 Dv = Dw*c/(keff*c) # cutted speed width
 W0 = np.pi/2/ty # Rabi freq 78539
-T = 12e-3 # between impulse
+T = 5e-3 # between impulse
 dw0 = 0. # start laser detuning
 v0z = -v_s # начальное смещение по вертикальной скорости
 n = 1000 # количество рассчётных точек
