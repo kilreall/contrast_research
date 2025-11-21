@@ -1,7 +1,10 @@
 import numpy as np 
 import matplotlib.pyplot as plt
 from scipy.integrate import solve_ivp
+from scipy.optimize import curve_fit
 
+def sinss(x, A, w, ph, s, al):
+    return A*np.sin(w*x+ph) + s + al*(x-x0)
 
 def f_vz(vz, v0z, T_K):      # Функция распределения Максвелла для v_z
     prefactor = np.sqrt(mRb / (2 * np.pi * kb * T_K))
@@ -219,15 +222,18 @@ def dw2(t0, a, vz):
 # def fR2(t0, z, vz, a, ph, vz0): # хороший вариант
 #     return  -keff*z + (2*w0 + dw2(0, 1, vz0) + dw2(t0, a, vz))*t0/2 + ph 
 
-def fR2(t0, z, vz, a, ph, vz0): # похожий на правильный вариант
-    return  -keff*z + (w0 + dw0)*t0 + np.pi*a*t0**2 + ph - dw2(t0, a, vz)*t0
+# def fR2(t0, z, vz, a, ph, vz0): # похожий на правильный вариант
+#     return  -keff*z + (w0 + dw0)*t0 + np.pi*a*t0**2 + ph - dw2(t0, a, vz)*t0
+
+def fR2(t0, z, vz, a, Dt, ph, vz0): # упрощённый верный
+    return  -keff*z + dw0*t0 + np.pi*a*t0**2 + ph - keff*(vz0+v_s+g*T)*1.33*ty*3
 
 def RiM2(t0, r, vz, Dt, a, ph, vz0):
 
     dtn = Wg**2/D - We**2/D - dw2(t0, a, vz)
     WR = np.sqrt(W0**2 + dtn**2)
 
-    laser_phase = fR2(t0, r, vz, a, ph, vz0)
+    laser_phase = fR2(t0, r, vz, a, Dt, ph, vz0)
 
     # динамические фазы
     ph_p  = np.exp(1j * (Wg**2/D + We**2/D + dw2(t0, a, vz)) * Dt/2)
@@ -329,8 +335,14 @@ def show_result():
     plt.title("interference")
     plt.xlabel("chirp rate")
     plt.ylabel("Population")
+
+    initial_guess = [(np.max(P2) - np.min(P2))/2, 2*np.pi*T*T, 0, (np.max(P2) - np.min(P2))/2, 35e-10] 
+    par, cov = curve_fit(sinss, a_range, P2, p0=initial_guess)
+    A, w, ph, s, al = par
+    V = abs(A)/s
+
     print(np.max(P2)- np.min(P2), "swing")
-    print((np.max(P2)- np.min(P2))/(np.max(P2) + np.min(P2)), "contrast")
+    print(V, "contrast")
 
     plt.show()
 
@@ -351,28 +363,32 @@ v_s = keff*h_/mRb/2 # переданная фотонами половина с�
 # experimental parameters
 g = 9.81459
 ty = 20e-6 # pi/2 impulse duration
-a1 = 25.050e6 # start chirp
-a2 = 25.225e6 # # end chirp
+# a1 = 500000. # start chirp # 210 mks
+# a2 = 50500000. # # end chirp # 210 mks
+a1 = 25.050e6 # start chirp # 210 mks
+a2 = 25.225e6 # # end chirp # 210 mks
 na = 100# chirp points
 a_range = np.linspace(a1, a2, na)
+x0 = a_range[0]
 nT = 300
 Dw = 1/ty # Raman pi/2 pulse width
 Dv = Dw*c/(keff*c) # cutted speed width
 W0 = np.pi/2/ty # Rabi freq 78539
 T = 5e-3 # between impulse
-v0z = -2*v_s + 15128e-6*g #-v_s # начальное смещение по вертикальной скорости
-dw0 = keff*(v0z + v_s)*0.7 # start laser detuning
+v0z = 15128e-6*g #-v_s # начальное смещение по вертикальной скорости
+dw0 = keff*(v0z + v_s)*1 # start laser detuning
 n = 1000 # количество рассчётных точек
-Wg, We = 5e6, 3.5e6 # dynamic start AC shifts
+Wg, We = 5e6*0, 3.5e6*0 # dynamic start AC shifts
 D = 1e9
 T_K = 5.5e-6
 v_spread = 2*np.sqrt(3*kb*T_K/mRb)
+
 
 print(keff*h_/mRb*keff/W0/2)
 #print(keff*g/2/np.pi, "a0")
 print(keff*g/2/np.pi*1e-6)
 print(np.sqrt(3*kb*T_K/mRb)*1e3)
+print(dw0)
 
-#chirp2(-v_s)
 show_result()
 
