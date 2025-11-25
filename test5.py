@@ -15,10 +15,10 @@ def Rim3M(t, c, z, vz, t0, Dt, a, ph, vz0):
 
     M = np.zeros((2,2), dtype = complex)
 
-    M[0,0] = 1j * (Wg)**2/D/2
-    M[0,1] = 1j * (W0)/2 * np.exp(1j*detPh)
-    M[1,0] = 1j * (W0)/2 * np.exp(-1j*detPh)
-    M[1,1] = 1j * (We)**2/D/2
+    M[0,0] = 1j * (Wg*F(t0, t, Dt))**2/2/D
+    M[0,1] = 1j * (W0*F(t0, t, Dt))/2 * np.exp(1j*detPh)
+    M[1,0] = 1j * (W0*F(t0, t, Dt))/2 * np.exp(-1j*detPh)
+    M[1,1] = 1j * (We*F(t0, t, Dt))**2/2/D
 
     return M@c
 
@@ -47,7 +47,7 @@ def test(ty):
     P2 = []
     for tyi in ty_r:
         c0 = np.array([1,0], dtype=complex)
-        c = RiM3(c0, 0, 0, 0, tyi, 25e6, 0, 0)
+        c = RiM3(c0, 0, 0, v_s, tyi, 25e6, 0, 0)
         P = np.abs(c)**2
         P2.append(P[1])
 
