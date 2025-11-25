@@ -4,21 +4,21 @@ from scipy.integrate import solve_ivp
 from scipy.optimize import curve_fit
 
 
-def F(t, Dt):
+def F(t0, t, Dt):
     sg = Dt/2.355
-    R = np.exp(-t**2/2/sg)
-    return 1
+    R = np.exp(-(t-(t0+Dt/2))**2/2/sg**2)
+    return R
 
 def Rim3M(t, c, z, vz, t0, Dt, a, ph, vz0):
     
-    detPh = -keff*z + dw0*t0 + np.pi*a*t0**2 + ph - keff*(vz + vz + g*(t-t0) + 2*v_s)/2*(t-t0)*0
+    detPh = -keff*z + dw0*t + np.pi*a*t**2 + ph
 
     M = np.zeros((2,2), dtype = complex)
 
-    M[0,0] = 1j * (Wg*F(t, Dt))**2/D
-    M[0,1] = 1j * (W0*F(t, Dt))/2/D * np.exp(1j*detPh)
-    M[1,0] = 1j * (W0*F(t, Dt))/2/D * np.exp(-1j*detPh)
-    M[1,1] = 1j * (We*F(t, Dt))**2/D
+    M[0,0] = 1j * (Wg)**2/D/2
+    M[0,1] = 1j * (W0)/2 * np.exp(1j*detPh)
+    M[1,0] = 1j * (W0)/2 * np.exp(-1j*detPh)
+    M[1,1] = 1j * (We)**2/D/2
 
     return M@c
 
@@ -47,7 +47,7 @@ def test(ty):
     P2 = []
     for tyi in ty_r:
         c0 = np.array([1,0], dtype=complex)
-        c = RiM3(c0, 0, 0, -v_s, tyi, 0, 0, 0)
+        c = RiM3(c0, 0, 0, 0, tyi, 25e6, 0, 0)
         P = np.abs(c)**2
         P2.append(P[1])
 
@@ -82,8 +82,8 @@ Dw = 1/ty # Raman pi/2 pulse width
 Dv = Dw*c/(keff*c) # cutted speed width
 W0 = np.pi/2/ty # Rabi freq 78539
 T = 5e-3 # between impulse
-v0z = -v_s #-v_s # начальное смещение по вертикальной скорости
-dw0 = keff*(v0z + v_s)*1 # start laser detuning
+v0z = 0 #-v_s # начальное смещение по вертикальной скорости
+dw0 = 0 # start laser detuning
 n = 1000 # количество рассчётных точек
 Wg, We = 5e6, 3.5e6 # dynamic start AC shifts
 D = 1e9
