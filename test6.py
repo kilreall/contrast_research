@@ -1,4 +1,4 @@
-# 2D for freq width
+# 3D for freq width
 
 import numpy as np 
 import matplotlib.pyplot as plt
@@ -9,47 +9,50 @@ from scipy.optimize import curve_fit
 def F(t0, t, Dt):
     sg = Dt/2.355
     R = np.exp(-(t-(t0+Dt/2))**2/2/sg**2)
-    return 1
+    return R
 
 def Rim3M(t, c, z, vz, t0, Dt, a, ph, vz0):
     
-    detPh = -keff*z + (dw0-0*keff*(vz+v_s))*t + np.pi*a*t**2 + ph
+    dpt = dw0*t + np.pi*a*t**2 - keff*z # doppler
 
-    M = np.zeros((2,2), dtype = complex)
+    M = np.zeros((3,3), dtype = complex)
 
-    M[0,0] = 1j * (Wg*F(t0, t, Dt))**2/2/D
-    M[0,1] = 1j * (W0*F(t0, t, Dt))/2 * np.exp(1j*detPh)
-    M[1,0] = 1j * (W0*F(t0, t, Dt))/2 * np.exp(-1j*detPh)
-    M[1,1] = 1j * (We*F(t0, t, Dt))**2/2/D
+    M[0,2] = -1j*Wg*np.exp(-1j*D*t)
+
+    M[1,2] = -1j*We*np.exp(-1j*(D*t + dpt))
+
+    M[2,0] = 1j*Wg*np.exp(1j*(D*t))
+
+    M[2,1] = -1j*We*np.exp(1j*(D*t + dpt))
 
     return M@c
 
 def RiM3(c0, t0, z, vz, Dt, a, ph, vz0):
+    # c0 теперь массив из 3 комплексных амплитуд: [c1, c2, c3]
+    # Переводим комплексное состояние в вещественный вектор длины 6
+    y0 = np.concatenate([c0.real, c0.imag])  # [real(c1), real(c2), real(c3), imag(c1), imag(c2), imag(c3)]
 
-    # переводим комплексное состояние в вещественный вектор
-    y0 = np.concatenate([c0.real, c0.imag])
-
-    # определяем реальную систему уравнений
+    # Определяем реальную систему уравнений
     def fun_real(t, y):
-        c = y[:2] + 1j * y[2:]                # восстанавливаем комплекс
-        dc = Rim3M(t, c, z, vz, t0, Dt, a, ph, vz0)
-        return np.concatenate([dc.real, dc.imag])  # возвращаем real + imag
+        c = y[:3] + 1j * y[3:]  # Восстанавливаем комплексный массив [c1, c2, c3]
+        dc = Rim3M(t, c, z, vz, t0, Dt, a, ph, vz0)  # dc — массив из 3 комплексных производных
+        return np.concatenate([dc.real, dc.imag])  # Возвращаем [real(dc1), real(dc2), real(dc3), imag(dc1), imag(dc2), imag(dc3)]
 
-    # решаем
+    # Решаем ОДУ
     sol = solve_ivp(fun_real, (t0, t0 + Dt), y0, t_eval=None,
-                    method='DOP853', rtol=1e-8, atol=1e-10)
+                    method='BDF')
 
-    # финальное комплексное состояние
-    c_end = sol.y[:2, -1] + 1j * sol.y[2:, -1]
+    # Финальное комплексное состояние
+    c_end = sol.y[:3, -1] + 1j * sol.y[3:, -1]  # [c1_end, c2_end, c3_end]
 
     return c_end
 
 def test(ty):
-    ty_r = np.linspace(0, 4*ty, 100)
+    ty_r = np.linspace(0, 4*ty, 2)
     P2 = []
     for tyi in ty_r:
-        c0 = np.array([1,0], dtype=complex)
-        c = RiM3(c0, 0, 0, v_s, tyi, 25e6, 0, 0)
+        c0 = np.array([1,0,0], dtype=complex)
+        c = RiM3(c0, 0, 0, 0, tyi, 0, 0, 0)
         P = np.abs(c)**2
         P2.append(P[1])
 
@@ -87,7 +90,7 @@ T = 5e-3 # between impulse
 v0z = 0 #-v_s # начальное смещение по вертикальной скорости
 dw0 = 0 # start laser detuning
 n = 1000 # количество рассчётных точек
-Wg, We = 5e6, 3.5e6 # dynamic start AC shifts
+Wg, We = 5e6, 3.5e6 # Rabi freq for one photon transition
 D = 1e9
 T_K = 5.5e-6
 v_spread = 2*np.sqrt(3*kb*T_K/mRb)

@@ -226,7 +226,7 @@ def dw2(t0, a, vz):
 #     return  -keff*z + (w0 + dw0)*t0 + np.pi*a*t0**2 + ph - dw2(t0, a, vz)*t0
 
 def fR2(t0, z, vz, a, Dt, ph, vz0): # упрощённый верный
-    return  -keff*z + dw0*t0 + np.pi*a*t0**2 + ph - keff*(vz0+v_s+g*T)*1.33*ty*3
+    return  -keff*z + dw0*t0 + np.pi*a*t0**2 + ph - keff*(vz + v_s)*t0*0
 
 def RiM2(t0, r, vz, Dt, a, ph, vz0):
 
@@ -362,23 +362,23 @@ v_s = keff*h_/mRb/2 # переданная фотонами половина с�
 
 # experimental parameters
 g = 9.81459
-ty = 20e-6 # pi/2 impulse duration
+ty = 10e-6 # pi/2 impulse duration
 # a1 = 500000. # start chirp # 210 mks
 # a2 = 50500000. # # end chirp # 210 mks
-a1 = 25.050e6 # start chirp # 210 mks
-a2 = 25.225e6 # # end chirp # 210 mks
-na = 100# chirp points
+a1 = -250e7 # start chirp # 210 mks
+a2 = 250e7 # # end chirp # 210 mks
+na = 500# chirp points
 a_range = np.linspace(a1, a2, na)
 x0 = a_range[0]
 nT = 300
 Dw = 1/ty # Raman pi/2 pulse width
 Dv = Dw*c/(keff*c) # cutted speed width
 W0 = np.pi/2/ty # Rabi freq 78539
-T = 5e-3 # between impulse
-v0z = 15128e-6*g #-v_s # начальное смещение по вертикальной скорости
+T = 110e-6 # between impulse
+v0z = 15128e-6*g*0 - v_s# начальное смещение по вертикальной скорости
 dw0 = keff*(v0z + v_s)*1 # start laser detuning
 n = 1000 # количество рассчётных точек
-Wg, We = 5e6*0, 3.5e6*0 # dynamic start AC shifts
+Wg, We = 5e6, 3.5e6 # dynamic start AC shifts
 D = 1e9
 T_K = 5.5e-6
 v_spread = 2*np.sqrt(3*kb*T_K/mRb)
