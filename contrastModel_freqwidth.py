@@ -1,10 +1,7 @@
-import numpy as np
+import numpy as np 
 import matplotlib.pyplot as plt
 from scipy.integrate import solve_ivp
 from scipy.optimize import curve_fit
-import concurrent.futures
-from functools import partial  # Добавлено для передачи аргументов в map
-import time
 
 def sinss(x, A, w, ph, s, al):
     return A*np.sin(w*x+ph) + s + al*(x-x0)
@@ -14,21 +11,20 @@ def f_vz(vz, v0z, T_K):      # Функция распределения Мак�
     exponent = - (mRb * (vz-v0z)**2) / (2 * kb * T_K)
     return prefactor * np.exp(exponent)
 
-def F(t0, t, Dt):
+def F(t, Dt):
     sg = Dt/2.355
-    R = np.exp(-(t-(t0+Dt/2))**2/2/sg**2)
-    return R
+    return np.exp(-t**2/2/sg)
 
 def Rim3M(t, c, z, vz, t0, Dt, a, ph, vz0):
     
-    detPh = -keff*z + dw0*t + np.pi*a*t0**2 + ph
+    detPh = -keff*z + dw0*t0 + np.pi*a*t0**2 + ph - keff*(vz + vz + g*(t-t0) + 2*v_s)/2*(t-t0)*0
 
     M = np.zeros((2,2), dtype = complex)
 
-    M[0,0] = 1j * (Wg*F(t0, t, Dt))**2/2/D
-    M[0,1] = 1j * (W0*F(t0, t, Dt))/2 * np.exp(1j*detPh)
-    M[1,0] = 1j * (W0*F(t0, t, Dt))/2 * np.exp(-1j*detPh)
-    M[1,1] = 1j * (We*F(t0, t, Dt))**2/2/D
+    M[0,0] = 1j * (Wg*F(t, Dt))**2/D
+    M[0,1] = 1j * (W0*F(t, Dt))/2/D * np.exp(1j*detPh)
+    M[1,0] = 1j * (W0*F(t, Dt))/2/D * np.exp(-1j*detPh)
+    M[1,1] = 1j * (We*F(t, Dt))**2/D
 
     return M@c
 
@@ -52,6 +48,7 @@ def RiM3(c0, t0, z, vz, Dt, a, ph, vz0):
 
     return c_end
 
+
 def interference2(a, vz0):
 
     c0 = np.array([1,0], dtype=complex)
@@ -69,6 +66,7 @@ def interference2(a, vz0):
     c2i = RiM3(c1i, T, z2I, vz2II, 2*ty, a, 0, vz0)
     
     c2ii = RiM3(c1ii, T, z2II, vz2II, 2*ty, a, 0, vz0)
+
 
     c2 = np.array([c2i[0], c2ii[1]], dtype=complex)
 
@@ -89,50 +87,42 @@ def interference2(a, vz0):
 
     return P3
 
-# Теперь compute_for_a принимает vz0 явно (убрали global)
-def compute_for_a(a, vz0):
-    Pa = interference2(a, vz0)
-    return Pa[0], Pa[1]
 
 def chirp2(vz0):
-    # Используем partial для передачи vz0 в compute_for_a
-    compute_partial = partial(compute_for_a, vz0=vz0)
-    
-    with concurrent.futures.ProcessPoolExecutor() as executor:
-        results = list(executor.map(compute_partial, a_range))
-
-    P1 = [r[0] for r in results]
-    P2 = [r[1] for r in results]
+    P1 = []
+    P2 = []
+    for a in a_range:
+        Pa = interference2(a, vz0)
+        P1.append(Pa[0])
+        P2.append(Pa[1])
 
     P1 = np.array(P1)
     P2 = np.array(P2)
 
+    # plt.plot(a_range, P2)
+    # plt.title("interference")
+    # plt.xlabel("chirp rate")
+    # plt.ylabel("Population")
+    # print(np.max(P2)- np.min(P2), "swing")
+    # print((np.max(P2)- np.min(P2))/(np.max(P2) + np.min(P2)), "contrast")
+
+    # plt.show()
+
     return np.array([P1, P2])
 
-# compute_for_vz0 принимает dvz_s явно (убрали global)
-def compute_for_vz0(vz0, dvz_s):
-    return chirp2(vz0) * f_vz(vz0, v0z, T_K) * dvz_s
-
 def T_Int():
+
     vz0_m = np.linspace(-6*v_spread, 6*v_spread, nT)
     dvz_s = 12*v_spread/(nT-1)
-    
-    # Используем partial для передачи dvz_s в compute_for_vz0
-    compute_partial = partial(compute_for_vz0, dvz_s=dvz_s)
-    
-    with concurrent.futures.ProcessPoolExecutor() as executor:
-        results = list(executor.map(compute_partial, vz0_m))
-
-    Pa = np.sum(results, axis=0)  # Суммируем результаты
+    Pa = np.zeros((2, na))
+    for vz0 in vz0_m:
+        Pa += chirp2(vz0)*f_vz(vz0, v0z, T_K)*dvz_s
 
     return Pa
 
 def show_result():
-    start = time.time()
-    Pa = T_Int()
-    end = time.time()
-    print(f"T_Int() занял {end - start:.2f} секунд")
 
+    Pa = chirp2(v0z)
     P1 = Pa[0]
     P2 = Pa[1]
     plt.plot(a_range, P2)
@@ -151,6 +141,7 @@ def show_result():
     plt.show()
 
     return 1
+
 
 # constants
 c = 3e8
@@ -186,12 +177,11 @@ D = 1e9
 T_K = 5.5e-6
 v_spread = 2*np.sqrt(3*kb*T_K/mRb)
 
-# Убрали ненужные глобальные переменные
 
 print(keff*h_/mRb*keff/W0/2)
+#print(keff*g/2/np.pi, "a0")
 print(keff*g/2/np.pi*1e-6)
 print(np.sqrt(3*kb*T_K/mRb)*1e3)
 print(dw0)
 
-if __name__ == '__main__':
-    show_result()
+show_result()

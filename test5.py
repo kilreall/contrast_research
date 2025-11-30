@@ -9,7 +9,7 @@ from scipy.optimize import curve_fit
 def F(t0, t, Dt):
     sg = Dt/2.355
     R = np.exp(-(t-(t0+Dt/2))**2/2/sg**2)
-    return R
+    return 1
 
 def Rim3M(t, c, z, vz, t0, Dt, a, ph, vz0):
     
