@@ -19,7 +19,7 @@ C4 = np.array([0.47, 0.94, 0.99])
 
 plt.figure(1)
 plt.title("C againt ty for certain T")
-plt.xlabel("ty, [uks]")
+plt.xlabel("ty, [us]")
 plt.ylabel("C")
 plt.plot(ty*1e6, C2)
 

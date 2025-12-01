@@ -123,7 +123,7 @@ def T_Int():
 
 def show_result():
 
-    Pa = T_Int()
+    Pa = chirp2(v0z)
     P1 = Pa[0]
     P2 = Pa[1]
     plt.plot(a_range, P2)
