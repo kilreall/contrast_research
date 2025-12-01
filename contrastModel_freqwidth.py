@@ -11,9 +11,10 @@ def f_vz(vz, v0z, T_K):      # Функция распределения Мак�
     exponent = - (mRb * (vz-v0z)**2) / (2 * kb * T_K)
     return prefactor * np.exp(exponent)
 
-def F(t, Dt):
+def F(t0, t, Dt):
     sg = Dt/2.355
-    return np.exp(-t**2/2/sg)
+    R = np.exp(-(t-(t0+Dt/2))**2/2/sg**2)
+    return 1
 
 def Rim3M(t, c, z, vz, t0, Dt, a, ph, vz0):
     
@@ -21,10 +22,10 @@ def Rim3M(t, c, z, vz, t0, Dt, a, ph, vz0):
 
     M = np.zeros((2,2), dtype = complex)
 
-    M[0,0] = 1j * (Wg*F(t, Dt))**2/D
-    M[0,1] = 1j * (W0*F(t, Dt))/2/D * np.exp(1j*detPh)
-    M[1,0] = 1j * (W0*F(t, Dt))/2/D * np.exp(-1j*detPh)
-    M[1,1] = 1j * (We*F(t, Dt))**2/D
+    M[0,0] = 1j * (Wg*F(t0, t, Dt))**2/D
+    M[0,1] = 1j * (W0*F(t0, t, Dt)**2)/2 * np.exp(1j*detPh)
+    M[1,0] = 1j * (W0*F(t0, t, Dt)**2)/2 * np.exp(-1j*detPh)
+    M[1,1] = 1j * (We*F(t0, t, Dt))**2/D
 
     return M@c
 
@@ -122,7 +123,7 @@ def T_Int():
 
 def show_result():
 
-    Pa = chirp2(v0z)
+    Pa = T_Int()
     P1 = Pa[0]
     P2 = Pa[1]
     plt.plot(a_range, P2)
@@ -167,7 +168,7 @@ x0 = a_range[0]
 nT = 300
 Dw = 1/ty # Raman pi/2 pulse width
 Dv = Dw*c/(keff*c) # cutted speed width
-W0 = np.pi/2/ty # Rabi freq 78539
+W0 = np.pi/2/ty*1.2 # Rabi freq 78539
 T = 5e-3 # between impulse
 v0z = 15128e-6*g #-v_s # начальное смещение по вертикальной скорости
 dw0 = keff*(v0z + v_s)*1 # start laser detuning

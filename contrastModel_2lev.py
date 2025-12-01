@@ -228,12 +228,12 @@ def dw2(t0, a, vz):
 def fR2(t0, z, vz, a, Dt, ph, vz0): # упрощённый верный
     return  -keff*z + dw0*t0 + np.pi*a*t0**2 + ph
 
-def RiM2(t0, r, vz, Dt, a, ph, vz0):
+def RiM2(t0, z, vz, Dt, a, ph, vz0):
 
     dtn = Wg**2/D - We**2/D - dw2(t0, a, vz)
     WR = np.sqrt(W0**2 + dtn**2)
 
-    laser_phase = fR2(t0, r, vz, a, Dt, ph, vz0)
+    laser_phase = fR2(t0, z, vz, a, Dt, ph, vz0)
 
     # динамические фазы
     ph_p  = np.exp(1j * (Wg**2/D + We**2/D + dw2(t0, a, vz)) * Dt/2)
@@ -362,19 +362,19 @@ v_s = keff*h_/mRb/2 # переданная фотонами половина с�
 
 # experimental parameters
 g = 9.81459
-ty = 0.2e-6 # pi/2 impulse duration
+ty = 0.25e-6 # pi/2 impulse duration
 # a1 = 500000. # start chirp # 210 mks
 # a2 = 50500000. # # end chirp # 210 mks
-a1 = 25.050e6 # start chirp # 210 mks
-a2 = 25.225e6 # # end chirp # 210 mks
-na = 500# chirp points
+a1 = 25.1655e6 # start chirp # 210 mks
+a2 = 25.165650e6 # # end chirp # 210 mks
+na = 100# chirp points
 a_range = np.linspace(a1, a2, na)
 x0 = a_range[0]
 nT = 300
 Dw = 1/ty # Raman pi/2 pulse width
 Dv = Dw*c/(keff*c) # cutted speed width
 W0 = np.pi/2/ty # Rabi freq 78539
-T = 5e-3 # between impulse
+T = 120e-3 # between impulse
 v0z = 15128e-6*g # начальное смещение по вертикальной скорости
 dw0 = keff*(v0z + v_s)*1 # start laser detuning
 n = 1000 # количество рассчётных точек

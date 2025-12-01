@@ -9,7 +9,7 @@ from scipy.optimize import curve_fit
 def F(t0, t, Dt):
     sg = Dt/2.355
     R = np.exp(-(t-(t0+Dt/2))**2/2/sg**2)
-    return 1
+    return R
 
 def Rim3M(t, c, z, vz, t0, Dt, a, ph, vz0):
     
@@ -71,7 +71,7 @@ v_s = keff*h_/mRb/2 # переданная фотонами половина с�
 
 # experimental parameters
 g = 9.81459
-ty = 20e-6 # pi/2 impulse duration
+ty = 20e-6# pi/2 impulse duration
 # a1 = 500000. # start chirp # 210 mks
 # a2 = 50500000. # # end chirp # 210 mks
 a1 = 25.050e6 # start chirp # 210 mks
@@ -82,7 +82,7 @@ x0 = a_range[0]
 nT = 300
 Dw = 1/ty # Raman pi/2 pulse width
 Dv = Dw*c/(keff*c) # cutted speed width
-W0 = np.pi/2/ty # Rabi freq 78539
+W0 = np.pi/2/ty*1.2 # Rabi freq 78539
 T = 5e-3 # between impulse
 v0z = 0 #-v_s # начальное смещение по вертикальной скорости
 dw0 = 0 # start laser detuning
