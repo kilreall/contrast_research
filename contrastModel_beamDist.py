@@ -20,7 +20,7 @@ W0 = np.pi/2/ty
 Wg = 5e6
 We = 3.5e6
 D  = 1e9
-tb = 15128e-6 # time after MOT before interference
+tb = 15128e-6
 v0z = tb*g
 dw0 = keff*(v0z + v_s)
 rw = 7.5e-3
@@ -30,15 +30,15 @@ yc = 0
 # Chirp
 a1 = 25.050e6
 a2 = 25.225e6
-na = 100
+na = 200
 a_range = np.linspace(a1, a2, na)
 
 # Monte Carlo parameters
 T_K = 5.5e-6
 v_spread = np.sqrt(kb*T_K/mRb)
 s_spread = 0.1e-3
-M = 2000  # количество случайных точек
-np.random.seed(42)  # для воспроизводимости
+M = 10000
+np.random.seed(42)
 
 # ------------------------
 # Gaussian Monte Carlo sampling
@@ -82,59 +82,57 @@ def RiM2_single(t0, z, vz, Dt, a, ph, vz0, r):
     M[1,1] = (np.cos(WR*Dt/2)-1j*dtn/WR*np.sin(WR*Dt/2))*ph_m
     return M
 
+# ------------------------
+# Fully vectorized interference
+# ------------------------
 @njit
-def interference2_vector(a_range, vz0, vx0, vy0, x0, y0):
+def TS_Int_vectorized_full(a_range, vz0_m, vx0_m, vy0_m, X, Y):
+    M = len(vz0_m)
     na = len(a_range)
-    c0 = np.array([1+0j,0+0j], dtype=np.complex128)
-    r0 = np.sqrt(x0**2 + y0**2)
-    P = np.zeros((2, na), dtype=np.float64)
+    Pa = np.zeros((2, na), dtype=np.float64)
     
-    for i in range(na):
-        # Первый импульс
-        M1 = RiM2_single(0,0,vz0,ty,a_range[i],0,vz0,r0)
-        c1 = M1 @ c0
+    c0 = np.array([1+0j,0+0j], dtype=np.complex128)
+    
+    for m in range(M):
+        vz0 = vz0_m[m]
+        vx0 = vx0_m[m]
+        vy0 = vy0_m[m]
+        x0 = X[m]
+        y0 = Y[m]
+        r0 = np.sqrt(x0**2 + y0**2)
         
-        # Второй импульс
         X1 = vx0*(T+ty) + x0
         Y1 = vy0*(T+ty) + y0
         r1 = np.sqrt(X1**2 + Y1**2)
+        X2 = X1 + vx0*(T+2*ty)
+        Y2 = Y1 + vy0*(T+2*ty)
+        r2 = np.sqrt(X2**2 + Y2**2)
         
         z2I  = (vz0 + 2*v_s)*T + g*T**2/2
         vz2I = vz0 + 2*v_s + g*T
         z2II  = vz0*T + g*T**2/2
         vz2II = vz0 + g*T
-        
-        c1i = np.array([0+0j, c1[1]], dtype=np.complex128)
-        c1ii= np.array([c1[0],0+0j], dtype=np.complex128)
-        
-        M2i  = RiM2_single(T,z2I,vz2II,2*ty,a_range[i],0,vz0,r1)
-        M2ii = RiM2_single(T,z2II,vz2II,2*ty,a_range[i],0,vz0,r1)
-        
-        c2 = M2i @ c1i + M2ii @ c1ii
-        
-        # Третий импульс
-        X2 = X1 + vx0*(T+2*ty)
-        Y2 = Y1 + vy0*(T+2*ty)
-        r2 = np.sqrt(X2**2 + Y2**2)
-        
         z3II = z2II + (vz2II+2*v_s)*T + g*T*T/2
         vz3I = vz2I - 2*v_s + g*T
         
-        M3 = RiM2_single(2*T, z3II, vz3I, ty, a_range[i],0,vz0,r2)
-        c3 = M3 @ c2
-        
-        P[:,i] = np.abs(c3)
-    return P
-
-# ------------------------
-# Vectorized TS_Int with Gaussian Monte Carlo
-# ------------------------
-def TS_Int_vectorized_gauss(a_range, vz0_m, vx0_m, vy0_m, X, Y):
-    M = len(vz0_m)
-    Pa = np.zeros((2, len(a_range)), dtype=np.float64)
-    for m in range(M):
-        P_vals = interference2_vector(a_range, vz0_m[m], vx0_m[m], vy0_m[m], X[m], Y[m])
-        Pa += P_vals / M  # усреднение
+        for j in range(na):
+            a = a_range[j]
+            # Первый импульс
+            M1 = RiM2_single(0,0,vz0,ty,a,0,vz0,r0)
+            c1 = M1 @ c0
+            
+            # Второй импульс
+            c1i = np.array([0+0j, c1[1]], dtype=np.complex128)
+            c1ii= np.array([c1[0],0+0j], dtype=np.complex128)
+            M2i  = RiM2_single(T,z2I,vz2II,2*ty,a,0,vz0,r1)
+            M2ii = RiM2_single(T,z2II,vz2II,2*ty,a,0,vz0,r1)
+            c2 = M2i @ c1i + M2ii @ c1ii
+            
+            # Третий импульс
+            M3 = RiM2_single(2*T, z3II, vz3I, ty, a,0,vz0,r2)
+            c3 = M3 @ c2
+            
+            Pa[:,j] += np.abs(c3)/M
     return Pa
 
 # ------------------------
@@ -146,9 +144,8 @@ def sinss(x, A, w, ph, s, al):
 # ------------------------
 # Plot and fit
 # ------------------------
-def show_result_vectorized_gauss():
-    Pa = TS_Int_vectorized_gauss(a_range, vz0_m, vx0_m, vy0_m, X, Y)
-    P1 = Pa[0]
+def show_result_vectorized_full():
+    Pa = TS_Int_vectorized_full(a_range, vz0_m, vx0_m, vy0_m, X, Y)
     P2 = Pa[1]
     
     plt.plot(a_range, P2)
@@ -168,4 +165,4 @@ def show_result_vectorized_gauss():
 # ------------------------
 # Run
 # ------------------------
-show_result_vectorized_gauss()
+show_result_vectorized_full()
