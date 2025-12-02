@@ -14,8 +14,8 @@ g = 9.81459
 lam = 780e-9
 keff = 2*2*np.pi/lam
 v_s = keff*h_/mRb/2
-ty = 20e-6
-T = 5e-3
+ty = 0.25e-6
+T = 120e-3
 W0 = np.pi/2/ty
 Wg = 5e6
 We = 3.5e6
@@ -28,15 +28,15 @@ xc = 0
 yc = 0
 
 # Chirp
-a1 = 25.050e6
-a2 = 25.225e6
-na = 200
+a1 = 25.1656e6
+a2 = 25.165660e6 
+na = 100
 a_range = np.linspace(a1, a2, na)
 
 # Monte Carlo parameters
 T_K = 5.5e-6
 v_spread = np.sqrt(kb*T_K/mRb)
-s_spread = 0.1e-3
+s_spread = 0.6e-3
 M = 10000
 np.random.seed(42)
 
@@ -87,8 +87,6 @@ def RiM2_single(t0, z, vz, Dt, a, ph, vz0, r):
 # ------------------------
 @njit
 def TS_Int_vectorized_full(a_range, vz0_m, vx0_m, vy0_m, X, Y):
-    M = len(vz0_m)
-    na = len(a_range)
     Pa = np.zeros((2, na), dtype=np.float64)
     
     c0 = np.array([1+0j,0+0j], dtype=np.complex128)
