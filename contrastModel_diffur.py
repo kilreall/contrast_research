@@ -14,11 +14,11 @@ def f_vz(vz, v0z, T_K):      # Функция распределения Мак�
 def F(t0, t, Dt):
     sg = Dt/2.355
     R = np.exp(-(t-(t0+Dt/2))**2/2/sg**2)
-    return 1
+    return R
 
 def Rim3M(t, c, z, vz, t0, Dt, a, ph, vz0):
     
-    detPh = -keff*z + dw0*t0 + np.pi*a*t0**2 + ph - keff*(vz + vz + g*(t-t0) + 2*v_s)/2*(t-t0)*0
+    detPh = -keff*z + dw0*t0 + np.pi*a*t0**2 + ph
 
     M = np.zeros((2,2), dtype = complex)
 

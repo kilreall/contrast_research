@@ -7,7 +7,7 @@ from scipy.optimize import curve_fit
 
 
 def F(t0, t, Dt):
-    sg = Dt/2.355
+    sg = Dt/2.355*4
     R = np.exp(-(t-(t0+Dt/2))**2/2/sg**2)
     return R
 
@@ -82,12 +82,12 @@ x0 = a_range[0]
 nT = 300
 Dw = 1/ty # Raman pi/2 pulse width
 Dv = Dw*c/(keff*c) # cutted speed width
-W0 = np.pi/2/ty*1.2 # Rabi freq 78539
+W0 = np.pi/2/ty # Rabi freq 78539
 T = 5e-3 # between impulse
 v0z = 0 #-v_s # начальное смещение по вертикальной скорости
 dw0 = 0 # start laser detuning
 n = 1000 # количество рассчётных точек
-Wg, We = 5e6, 3.5e6 # dynamic start AC shifts
+Wg, We = 5e6*0, 3.5e6*0 # dynamic start AC shifts
 D = 1e9
 T_K = 5.5e-6
 v_spread = 2*np.sqrt(3*kb*T_K/mRb)
