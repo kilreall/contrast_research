@@ -43,7 +43,7 @@ def RiM3(t0, c_1, c_2, z, Dt, a, ph):
     c_1_final = sol.y[0][-1] + 1j * sol.y[1][-1]
     c_2_final = sol.y[2][-1] + 1j * sol.y[3][-1]
 
-    return c_1_final, c_2_final
+    return np.array([c_1_final, c_2_final], dtype=complex)
 
 def interference2(a, vz0):
 
@@ -72,12 +72,12 @@ def interference2(a, vz0):
     z3II = z2II + (vz2II + 2*v_s)*T+g*T**2/2
     vz3II = vz2II + 2*v_s + g*T
 
-    c3 = RiM3(2*T, c2[0], c2[1], z3II, ty, a, 0) # переход для разных путей считается одновременно
-    #c3i = RiM2(2*T, z3I, vz3I, ty, a, 0, vz0)@np.array([c2i[0], 0], dtype=complex)
+    #c3 = RiM3(2*T, c2[0], c2[1], z3II, ty, a, 0) # переход для разных путей считается одновременно
+    c3i = RiM3(2*T, c2i[0], 0, z3I, ty, a, 0)
 
-    #c3ii = RiM2(2*T, z3II, vz3I, ty, a, 0, vz0)@np.array([0, c2ii[1]], dtype=complex)
+    c3ii = RiM3(2*T, 0, c2ii[1], z3II, ty, a, 0)
 
-    #c3 = c3i + c3ii
+    c3 = c3i + c3ii
 
     P3 = np.abs(c3)**2
 
@@ -155,7 +155,7 @@ nT = 300
 Dw = 1/ty # Raman pi/2 pulse width
 Dv = Dw*c/(keff*c) # cutted speed width
 W0 = np.pi/2/ty # Rabi freq 78539
-T = 120e-3 # between impulse
+T = 5e-3 # between impulse
 v0z = 15128e-6*g*0 - v_s # начальное смещение по вертикальной скорости
 dw0 = keff*(v0z + v_s)*1 # start laser detuning
 n = 1000 # количество рассчётных точек
