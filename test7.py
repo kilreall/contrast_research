@@ -1,4 +1,4 @@
-# check interference model
+# check interference model using diffirential equation
 
 import numpy as np 
 import matplotlib.pyplot as plt
@@ -9,45 +9,46 @@ def sinss(x, A, w, ph, s, al):
     return A*np.sin(w*x+ph) + s + al*(x-x0)
 
 
-def dw2(t0, a, vz):
-    vz = vz+v_s
-    return dw0 + 2*np.pi*a*t0 - keff*vz
+def Rim3_s(t, c, t0, z, a, ph):
+
+    c_1r, c_1i, c_2r, c_2i = c
+    c_1 = c_1r + 1j*c_1i
+    c_2 = c_2r + 1j*c_2i
+
+    phase = dw0*t - keff*z + np.pi*a*t + ph
+
+    M11 = 1j * np.abs(Wg)**2 /D 
+    M12 = 1j * W0/2 * np.exp(1j*phase)
+    M21 = 1j * W0/2 * np.exp(-1j*phase)
+    M22 = 1j * np.abs(We)**2/D
 
 
-def fR2(t0, z, vz, a, Dt, ph, vz0): # упрощённый верный
-    return  -keff*z + dw0*t0 + np.pi*a*t0**2 + ph
+    # Производные
+    dc_1 = M11 * c_1 + M12 * c_2
+    dc_2 = M21 * c_1 + M22 * c_2
 
-def RiM2(t0, z, vz, Dt, a, ph, vz0):
+    # Возвращаем реальные и мнимые части производных
+    return [dc_1.real, dc_1.imag, dc_2.real, dc_2.imag]
 
-    dtn = Wg**2/D - We**2/D - dw2(t0, a, vz)
-    WR = np.sqrt(W0**2 + dtn**2)
+def RiM3(t0, c_1, c_2, z, Dt, a, ph):
 
-    laser_phase = fR2(t0, z, vz, a, Dt, ph, vz0)
+    c = [c_1.real, c_1.imag, c_2.real, c_2.imag]
 
-    # динамические фазы
-    ph_p  = np.exp(1j * (Wg**2/D + We**2/D + dw2(t0, a, vz)) * Dt/2)
-    ph_m = np.exp(1j * (Wg**2/D + We**2/D - dw2(t0, a, vz)) * Dt/2)
+    # Интегрирование ОДУ от t0 до t0 + Dt
+    t_span = (t0, t0 + Dt)
+    sol = solve_ivp(Rim3_s, t_span, c, args=(t0, z, a, ph),
+                    method='RK45', rtol=1e-6, atol=1e-8)
 
-    M = np.zeros((2, 2), dtype=complex)
+    # Извлечение финальных комплексных амплитуд
+    c_1_final = sol.y[0][-1] + 1j * sol.y[1][-1]
+    c_2_final = sol.y[2][-1] + 1j * sol.y[3][-1]
 
-    # ВАЖНО: фазовый множитель умножает всю амплитуду, везде стоят скобки!
-    M[0,0] = (np.cos(WR*Dt/2) + 1j*dtn/WR*np.sin(WR*Dt/2)) * ph_p
-    M[0,1] = (1j * W0/WR * np.sin(WR*Dt/2)
-              * np.exp(1j * laser_phase)
-              * ph_p)
-
-    M[1,0] = (1j * W0/WR * np.sin(WR*Dt/2)
-              * np.exp(-1j * laser_phase)
-              * ph_m)
-
-    M[1,1] = (np.cos(WR*Dt/2) - 1j*dtn/WR*np.sin(WR*Dt/2)) * ph_m
-
-    return M
+    return c_1_final, c_2_final
 
 def interference2(a, vz0):
 
     c0 = np.array([1,0], dtype=complex)
-    c1 = RiM2(0, 0, vz0, ty, a, 0, vz0)@c0
+    c1 = RiM3(0, c0[0], c0[1], 0, ty, a, 0)
 
     z2I = (vz0 + 2*v_s)*T + g*T**2/2
     vz2I = vz0 + 2*v_s + g*T
@@ -58,9 +59,9 @@ def interference2(a, vz0):
     c1i = np.array([0, c1[1]], dtype=complex)
     c1ii = np.array([c1[0], 0], dtype=complex)
 
-    c2i = RiM2(T, z2I, vz2II, 2*ty, a, 0, vz0)@c1i
+    c2i = RiM3(T, c1i[0], c1i[1], z2I, 2*ty, a, 0)
     
-    c2ii = RiM2(T, z2II, vz2II, 2*ty, a, 0, vz0)@c1ii
+    c2ii = RiM3(T, c1ii[0], c1ii[1], z2II, 2*ty, a, 0)
 
 
     c2 = np.array([c2i[0], c2ii[1]], dtype=complex)
@@ -71,7 +72,7 @@ def interference2(a, vz0):
     z3II = z2II + (vz2II + 2*v_s)*T+g*T**2/2
     vz3II = vz2II + 2*v_s + g*T
 
-    c3 = RiM2(2*T, z3II, vz3I, ty, a, 0, vz0)@c2 # переход для разных путей считается одновременно
+    c3 = RiM3(2*T, c2[0], c2[1], z3II, ty, a, 0) # переход для разных путей считается одновременно
     #c3i = RiM2(2*T, z3I, vz3I, ty, a, 0, vz0)@np.array([c2i[0], 0], dtype=complex)
 
     #c3ii = RiM2(2*T, z3II, vz3I, ty, a, 0, vz0)@np.array([0, c2ii[1]], dtype=complex)
@@ -158,7 +159,7 @@ T = 120e-3 # between impulse
 v0z = 15128e-6*g*0 - v_s # начальное смещение по вертикальной скорости
 dw0 = keff*(v0z + v_s)*1 # start laser detuning
 n = 1000 # количество рассчётных точек
-Wg, We = 5e6*0, 3.5e6*0 # dynamic start AC shifts
+Wg, We = 5e6, 3.5e6 # dynamic start AC shifts
 D = 1e9
 T_K = 5.5e-6
 v_spread = 2*np.sqrt(3*kb*T_K/mRb)
