@@ -14,8 +14,8 @@ g = 9.81459
 lam = 780e-9
 keff = 2*2*np.pi/lam
 v_s = keff*h_/mRb/2
-ty = 8e-6
-T = 5e-3
+ty = 10e-6
+T = 1510e-6
 W0 = np.pi/2/ty
 Wg = 5e6
 We = 3.5e6
@@ -28,8 +28,8 @@ xc = 0
 yc = 0
 
 # Chirp
-a1 = 25.050e6
-a2 = 25.225e6
+a1 = 25.010e6
+a2 = 25.865e6
 na = 100
 a_range = np.linspace(a1, a2, na)
 
