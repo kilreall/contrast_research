@@ -14,8 +14,8 @@ g = 9.81459
 lam = 780e-9
 keff = 2*2*np.pi/lam
 v_s = keff*h_/mRb/2
-ty = 10e-6
-T = 1510e-6
+ty = 30e-6
+T = 120e-3
 W0 = np.pi/2/ty
 Wg = 5e6
 We = 3.5e6
@@ -28,8 +28,8 @@ xc = 0
 yc = 0
 
 # Chirp
-a1 = 25.010e6
-a2 = 25.865e6
+a1 = 25.1653e6
+a2 = 25.1659e6
 na = 100
 a_range = np.linspace(a1, a2, na)
 
@@ -37,7 +37,7 @@ a_range = np.linspace(a1, a2, na)
 T_K = 5.5e-6
 v_spread = np.sqrt(kb*T_K/mRb)
 s_spread = 0.6e-3
-M = 10000
+M = 1000000
 np.random.seed(42)
 
 # ------------------------
