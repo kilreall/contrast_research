@@ -328,7 +328,7 @@ def T_Int():
 
 def show_result():
 
-    Pa = T_Int()
+    Pa = chirp2(v0z)
     P1 = Pa[0]
     P2 = Pa[1]
     plt.plot(a_range, P2)
@@ -384,11 +384,11 @@ T_K = 5.5e-6
 v_spread = 2*np.sqrt(3*kb*T_K/mRb)
 
 
-print(keff*h_/mRb*keff/W0/2)
+print("1/2*peff/W0 = ",keff*h_/mRb*keff/W0/2)
 #print(keff*g/2/np.pi, "a0")
-print(keff*g/2/np.pi*1e-6)
-print(np.sqrt(3*kb*T_K/mRb)*1e3)
-print(dw0)
+print("a0",keff*g/2/np.pi*1e-6)
+#print("v_Tspread=", v_spread)
+print("dw0=", dw0)
 
 show_result()
 

@@ -14,35 +14,38 @@ g = 9.81459
 lam = 780e-9
 keff = 2*2*np.pi/lam
 v_s = keff*h_/mRb/2
-ty = 30e-6
-T = 120e-3
+ty = 10e-6
+T = 5e-3
 W0 = np.pi/2/ty
-Wg = 5e6
-We = 3.5e6
+Wg = 5e6*0
+We = 3.5e6*0
 D  = 1e9
 tb = 15128e-6
 v0z = tb*g
 dw0 = keff*(v0z + v_s) # тут может быть минус
-rw = 7.5e-3
+rw = 8.5e-3#7.5e-3
 xc = 0
 yc = 0
 
 # Chirp
-a1 = 25.1653e6
-a2 = 25.1659e6
+a0 = keff*g/(2*np.pi)
+a1 = a0 - 1/T**2*1/4
+a2 = a0 + 2/T**2
 na = 100
 a_range = np.linspace(a1, a2, na)
 
 # Monte Carlo parameters
-T_K = 5.5e-6
+T_K = 3.6e-6
 v_spread = np.sqrt(kb*T_K/mRb)
 s_spread = 0.6e-3
-M = 1000000
+M = 10000
 np.random.seed(42)
 
 # ------------------------
 # Gaussian Monte Carlo sampling
 # ------------------------
+
+
 vz0_m = np.random.normal(loc=v0z, scale=v_spread, size=M)
 vx0_m = np.random.normal(loc=0.0, scale=v_spread, size=M)
 vy0_m = np.random.normal(loc=0.0, scale=v_spread, size=M)
@@ -52,6 +55,12 @@ Y = np.random.normal(loc=yc, scale=s_spread, size=M)
 # ------------------------
 # Fast vectorized functions
 # ------------------------
+
+@njit
+def Pe(vz):
+    return W0**2/(W0**2 + dw2(0,0, vz)**2)
+
+
 @njit
 def Er(r):
     return np.exp(-r**2 / rw**2)*1
@@ -130,7 +139,8 @@ def TS_Int_vectorized_full(a_range, vz0_m, vx0_m, vy0_m, X, Y):
             M3 = RiM2_single(2*T, z3II, vz3I, ty, a,0,vz0,r2)
             c3 = M3 @ c2
             
-            Pa[:,j] += np.abs(c3)/M
+            Pa[:,j] += np.abs(c3)/M*Pe(vz0)
+
     return Pa
 
 # ------------------------
