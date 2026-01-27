@@ -14,7 +14,7 @@ g = 9.81459
 lam = 780e-9
 keff = 2*2*np.pi/lam
 v_s = keff*h_/mRb/2
-ty = 10e-6
+ty = 6e-6
 T = 5e-3
 W0 = np.pi/2/ty
 Wg = 5e6*0
@@ -24,7 +24,7 @@ tb = 15128e-6
 v0z = tb*g
 dw0 = keff*(v0z + v_s) # тут может быть минус
 rw = 7.5e-3#7.5e-3
-xc = rw
+xc = 0
 yc = 0
 
 # Chirp
@@ -139,7 +139,7 @@ def TS_Int_vectorized_full(a_range, vz0_m, vx0_m, vy0_m, X, Y):
             M3 = RiM2_single(2*T, z3II, vz3I, ty, a,0,vz0,r2)
             c3 = M3 @ c2
             
-            Pa[:,j] += np.abs(c3)/M*Pe(vz0)
+            Pa[:,j] += np.abs(c3)**2/M*Pe(vz0)
 
     return Pa
 
