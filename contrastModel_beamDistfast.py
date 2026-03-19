@@ -15,7 +15,7 @@ lam = 780e-9
 keff = 2*2*np.pi/lam
 v_s = keff*h_/mRb/2
 ty = 10e-6
-T = 5e-3
+T = 10e-3
 W0 = np.pi/2/ty
 Wg = 5e6*0
 We = 3.5e6*0
@@ -24,7 +24,7 @@ tb = 15128e-6
 v0z = tb*g
 dw0 = keff*(v0z + v_s)
 rw = 7.5e-3
-xc = 0.0
+xc = (7.5e-3)/4
 yc = 0.0
 
 # Chirp
@@ -35,7 +35,7 @@ na = 100
 a_range = np.linspace(a1, a2, na)
 
 # Monte Carlo
-T_K = 5.5e-6
+T_K = 5e-6
 v_spread = np.sqrt(kb*T_K/mRb)
 s_spread = 0.6e-3
 M = 100000
@@ -51,9 +51,9 @@ Y = np.random.normal(yc, s_spread, M)
 # Physics helpers
 # ------------------------
 
-@njit
+@njit # скорее всего лишняя функция
 def Pe(vz):
-    return W0**2/(W0**2 + dw2(0.0, 0.0, vz)**2)*0.0 + 1.0
+    return W0**2/(W0**2 + dw2(0.0, 0.0, vz)**2)*0. + 1.0
 
 @njit
 def Er(r):
